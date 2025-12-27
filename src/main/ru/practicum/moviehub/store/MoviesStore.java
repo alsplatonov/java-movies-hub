@@ -29,4 +29,8 @@ public class MoviesStore {
     public boolean isEmpty() {
         return movies.isEmpty();
     }
+
+    public void clear() {
+        movies.clear();
+    }
 }

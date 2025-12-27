@@ -99,7 +99,7 @@ public class MoviesHandler extends BaseHttpHandler {
         try {
             year = Integer.parseInt(yearStr);
         } catch (NumberFormatException e) {
-            String json = gson.toJson(new ErrorResponse("Некорректный параметр запроса — 'year'"));
+            String json = gson.toJson(new ErrorResponse("Некорректный параметр запроса — year"));
             sendJson(ex, 400, json);
             return;
         }
