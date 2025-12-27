@@ -1,7 +1,6 @@
 package ru.practicum.moviehub.http;
 
 import com.google.gson.Gson;
-import com.google.gson.internal.bind.util.ISO8601Utils;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -109,12 +108,8 @@ public class MoviesApiTest {
     //добавляет фильм при корректных данных
     @Test
     void postMovie_withValidData_addsMovie() throws Exception {
-        String body = """
-                {
-                  "title": "Inception",
-                  "year": 2010
-                }
-                """;
+
+        String body = "{ \"title\": \"Inception\", \"year\": 2010 }";
 
         HttpResponse<String> resp = post(body, "application/json");
 
@@ -131,12 +126,7 @@ public class MoviesApiTest {
     //возвращает ошибку при пустом title
     @Test
     void postMovie_withEmptyTitle_returns422() throws Exception {
-        String body = """
-                {
-                  "title": "",
-                  "year": 2010
-                }
-                """;
+        String body = "{ \"title\": \"\", \"year\": 2010 }";
 
         HttpResponse<String> resp = post(body, "application/json");
         assertEquals(422, resp.statusCode());
@@ -148,12 +138,7 @@ public class MoviesApiTest {
     void postMovie_withTooLongTitle_returns422() throws Exception {
         String longTitle = "A".repeat(101);
 
-        String body = """
-                {
-                  "title": "%s",
-                  "year": 2010
-                }
-                """.formatted(longTitle);
+        String body = "{ \"title\": \"" + longTitle + "\", \"year\": 2010 }";
 
         HttpResponse<String> resp = post(body, "application/json");
 
@@ -164,12 +149,7 @@ public class MoviesApiTest {
     //возвращает ошибку при неверном year (меньше 1888 или больше текущего года + 1)
     @Test
     void postMovie_withTooSmallYear_returns422() throws Exception {
-        String body = """
-                {
-                  "title": "Sample",
-                  "year": 1753
-                }
-                """;
+        String body = "{ \"title\": \"Sample\", \"year\": 1753 }";
 
         HttpResponse<String> resp = post(body, "application/json");
         assertEquals(422, resp.statusCode());
@@ -179,12 +159,7 @@ public class MoviesApiTest {
     //возвращает ошибку при неправильном Content-Type
     @Test
     void postMovie_withWrongContentType_returns415() throws Exception {
-        String body = """
-                {
-                  "title": "Inception",
-                  "year": 2010
-                }
-                """;
+        String body = "{ \"title\": \"Inception\", \"year\": 2010 }";
 
         HttpResponse<String> resp = post(body, "text/plain");
         assertEquals(415, resp.statusCode());
@@ -193,12 +168,7 @@ public class MoviesApiTest {
     //возвращает ошибку при некорректном JSON
     @Test
     void postMovie_withInvalidJson_returns400() throws Exception {
-        String body = """
-                {
-                  "title": "Inception",
-                  "year":
-                }
-                """;
+        String body = "{ \"title\": \"Inception\", \"year\": }";
 
         HttpResponse<String> resp = post(body, "application/json");
 
