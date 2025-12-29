@@ -42,7 +42,7 @@ public class MoviesHandler extends BaseHttpHandler {
                         if (queryParts.length == 2 && queryParts[0].equals("year")) { //GET /movies?year=YYYY
                             handleGetByYear(ex, queryParts[1]);
                         } else {
-                            String json = gson.toJson(new ErrorResponse("Некорректный параметр запроса — 'year'"));
+                            String json = gson.toJson(new ErrorResponse("Некорректный параметр запроса — year"));
                             sendJson(ex, 400, json);
                         }
                     }
@@ -134,9 +134,9 @@ public class MoviesHandler extends BaseHttpHandler {
         }
 
         // Валидация
-        String validationError = validateMovie(movieRequest);
-        if (validationError != null) {
-            sendJson(ex, 422, gson.toJson(new ErrorResponse(validationError)));
+        ArrayList<String> validationErrors = validateMovie(movieRequest);
+        if (!validationErrors.isEmpty()) {
+            sendJson(ex, 422, gson.toJson(new ErrorResponse("Некорректный запрос",validationErrors)));
             return;
         }
 
@@ -168,18 +168,19 @@ public class MoviesHandler extends BaseHttpHandler {
     // Вспомогательные методы
 
     // Проверка корректности фильма
-    private String validateMovie(Movie movie) {
+    private ArrayList<String> validateMovie(Movie movie) {
+        ArrayList<String> validationErrors = new ArrayList<>();
         if (movie.getTitle() == null || movie.getTitle().isBlank()) {
-            return "название не должно быть пустым";
+            validationErrors.add("название не должно быть пустым");
         }
         if (movie.getTitle().length() > 100) {
-            return "название не должно быть длиннее 100 символов";
+            validationErrors.add("название не должно быть длиннее 100 символов");
         }
         int currentYear = Year.now().getValue();
         if (movie.getYear() < 1888 || movie.getYear() > currentYear + 1) {
-            return "год должен быть между 1888 и " + (currentYear + 1);
+            validationErrors.add("год должен быть между 1888 и " + (currentYear + 1));
         }
-        return null;
+        return validationErrors;
     }
 
     // Получение фильма по ID с обработкой ошибок

@@ -23,7 +23,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class MoviesApiTest {
 
     // Базовая часть URL
-    private static final String BASE = "http://localhost:8080";
+    private static final int PORT = 8080;
+    private static final String BASE = "http://localhost:" + PORT;
+    private static final String MOVIES_PATH = "/movies";
 
     private static MoviesServer server;
     private static HttpClient client;
@@ -34,7 +36,7 @@ public class MoviesApiTest {
     static void beforeAll() {
         // создаём хранилище и сервер
         store = new MoviesStore();
-        server = new MoviesServer(store, 8080);
+        server = new MoviesServer(store, PORT);
         server.start();
 
         // HTTP-клиент
@@ -61,7 +63,7 @@ public class MoviesApiTest {
     @Test
     void getMovies_whenEmpty_returnsEmptyArray() throws Exception {
         HttpRequest req = HttpRequest.newBuilder()
-                .uri(URI.create(BASE + "/movies"))
+                .uri(URI.create(BASE + MOVIES_PATH))
                 .GET()
                 .build();
 
@@ -89,7 +91,7 @@ public class MoviesApiTest {
         store.add(new Movie(2, "Interstellar", 2014));
 
         HttpRequest req = HttpRequest.newBuilder()
-                .uri(URI.create(BASE + "/movies"))
+                .uri(URI.create(BASE + MOVIES_PATH))
                 .GET()
                 .build();
 
@@ -184,7 +186,7 @@ public class MoviesApiTest {
         store.add(new Movie(1, "Inception", 2010));
 
         HttpRequest req = HttpRequest.newBuilder()
-                .uri(URI.create(BASE + "/movies/1"))
+                .uri(URI.create(BASE + MOVIES_PATH + "/1"))
                 .GET()
                 .build();
 
@@ -206,7 +208,7 @@ public class MoviesApiTest {
     @Test
     void getMovieById_whenNotFound_returns404() throws Exception {
         HttpRequest req = HttpRequest.newBuilder()
-                .uri(URI.create(BASE + "/movies/100"))
+                .uri(URI.create(BASE + MOVIES_PATH + "/100"))
                 .GET()
                 .build();
 
@@ -222,7 +224,7 @@ public class MoviesApiTest {
     @Test
     void getMovieById_whenIdIsNotNumber_returns400() throws Exception {
         HttpRequest req = HttpRequest.newBuilder()
-                .uri(URI.create(BASE + "/movies/w"))
+                .uri(URI.create(BASE + MOVIES_PATH + "/w"))
                 .GET()
                 .build();
 
@@ -243,7 +245,7 @@ public class MoviesApiTest {
         store.add(new Movie(1, "Inception", 2010));
 
         HttpRequest req = HttpRequest.newBuilder()
-                .uri(URI.create(BASE + "/movies/1"))
+                .uri(URI.create(BASE + MOVIES_PATH + "/1"))
                 .DELETE()
                 .build();
 
@@ -260,7 +262,7 @@ public class MoviesApiTest {
     @Test
     void deleteMovieById_whenNotFound_returns404() throws Exception {
         HttpRequest req = HttpRequest.newBuilder()
-                .uri(URI.create(BASE + "/movies/100"))
+                .uri(URI.create(BASE + MOVIES_PATH + "/100"))
                 .DELETE()
                 .build();
 
@@ -276,7 +278,7 @@ public class MoviesApiTest {
     @Test
     void deleteMovieById_whenIdIsNotNumber_returns400() throws Exception {
         HttpRequest req = HttpRequest.newBuilder()
-                .uri(URI.create(BASE + "/movies/w"))
+                .uri(URI.create(BASE + MOVIES_PATH + "/w"))
                 .DELETE()
                 .build();
 
@@ -297,7 +299,7 @@ public class MoviesApiTest {
         store.add(new Movie(2, "Interstellar", 2014));
 
         HttpRequest req = HttpRequest.newBuilder()
-                .uri(URI.create(BASE + "/movies?year=2025"))
+                .uri(URI.create(BASE + MOVIES_PATH + "?year=2025"))
                 .GET()
                 .build();
 
@@ -314,7 +316,7 @@ public class MoviesApiTest {
     @Test
     void getMoviesByYear_whenYearIsNotNumber_returns400() throws Exception {
         HttpRequest req = HttpRequest.newBuilder()
-                .uri(URI.create(BASE + "/movies?year=wwww"))
+                .uri(URI.create(BASE + MOVIES_PATH + "?year=wwww"))
                 .GET()
                 .build();
 
@@ -337,7 +339,7 @@ public class MoviesApiTest {
         store.add(new Movie(3, "Shutter Island", 2010));
 
         HttpRequest req = HttpRequest.newBuilder()
-                .uri(URI.create(BASE + "/movies?year=2010"))
+                .uri(URI.create(BASE + MOVIES_PATH + "?year=2010"))
                 .GET()
                 .build();
 
@@ -365,11 +367,26 @@ public class MoviesApiTest {
         }
     }
 
+    //возвращает ошибку 405 при некорректном HTTP-методе
+    @Test
+    void whenMethodNotAllowed_returns405() throws Exception {
+        HttpRequest req = HttpRequest.newBuilder()
+                .uri(URI.create(BASE + MOVIES_PATH))
+                .PUT(HttpRequest.BodyPublishers.noBody()) // PUT не поддерживается
+                .build();
+
+        HttpResponse<String> resp =
+                client.send(req, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
+
+        assertEquals(405, resp.statusCode(), "При некорректном методе должен вернуться 405");
+    }
+
+
 
     //вспомогательный класс для post запроса
     private HttpResponse<String> post(String body, String contentType) throws Exception {
         HttpRequest.Builder builder = HttpRequest.newBuilder()
-                .uri(URI.create(BASE + "/movies"))
+                .uri(URI.create(BASE + MOVIES_PATH))
                 .POST(HttpRequest.BodyPublishers.ofString(body, StandardCharsets.UTF_8));
 
         if (contentType != null) {
